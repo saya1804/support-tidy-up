@@ -1,19 +1,28 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Support tidy up</title>
+    <title>Support Tidy Up</title>
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <h1>ログインページ</h1>
+    <div class="container">
+    <h1>Support Tidy Up</h1>
     <form method="post">
         {% csrf_token %}
-        <div>メールアドレス<input type="email" name="email"></div>
-        <div>パスワード<input type="password" name="password"></div>
+        <div>
+            <label>メールアドレス</label>
+            <input type="email" name="email" value>
+        </div>
+        <div>
+            <label>パスワード</label>
+            <input type="password" name="password">
+        </div>
         <button type="submit">ログイン</button>
     </form>
     {{ form.errors }}
-    <a href="{% url 'signup' %}">新規登録画面へ</a>
+    <a href="{% url 'signup' %}">新規アカウント登録</a>
 </body>
 </html>

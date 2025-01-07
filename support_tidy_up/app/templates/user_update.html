@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アカウント情報変更-Support Tidy Up</title>
+</head>
+<body>
+    <div class="container">
+        <h1>アカウント情報変更</h1>
+        <form method="post">
+            {% csrf_token %}
+            <div>
+                <label for="username">アカウント名</label>
+                <input type="text" name="username" id="username" value>
+            </div>
+            <div>
+                <label for="email">メールアドレス</label>
+                <input type="email" name="email" id="email">
+            </div>
+            <a href="{% url 'password_update' %}" class="button-link">
+                <button type="button">パスワード変更</button>
+            </a>
+            <a href="{% url 'home' %}" class="button_link">
+                <button type="button">更新</button>
+            </a>
+        </form>
+    </body>
+    </html>

@@ -28,3 +28,29 @@ class LoginForm(forms.Form):
         if self.user is None:
             raise forms.ValidationError("認証に失敗しました")
         return self.cleaned_data
+    
+class UserUpdateForm(forms.ModelForm):
+    
+    class Meta:
+        model = User
+        fields = ["username", "email"]
+    
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+            return user
+        
+class PasswordUpdateForm(forms.Form):
+    old_password = forms.CharField()
+    new_password = forms.CharField()
+    confirm_password = forms.CharField()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        new_password = cleaned_data.get("new_password")
+        confirm_password = cleaned_data.get("confirm_password")
+
+        if new_password != confirm_password:
+            raise forms.ValidationError("新規パスワードと確認用パスワードが一致しません。")
+        return cleaned_data

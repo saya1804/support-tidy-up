@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from app.views import PortfolioView, SignupView, LoginView, HomeView, UserUpdateView, PasswordUpdateView
+from app.views import PortfolioView, SignupView, LoginView, HomeView, UserUpdateView, PasswordUpdateView, UndecidedBoxView, BelongingsManagementView, DeclutteringSettingView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,4 +26,7 @@ urlpatterns = [
     path('home/', HomeView.as_view(), name="home"),
     path('uesr_update/', UserUpdateView.as_view(), name="user_update"),
     path('password_update/', PasswordUpdateView.as_view(), name="password_update"),
+    path('undecided_box/', UndecidedBoxView.as_view(), name="undecided_box"),
+    path('belongings_management/', BelongingsManagementView.as_view(), name="belongings_management"),
+    path('decluttering_setting/', DeclutteringSettingView.as_view(), name="decluttering_setting"),
 ]

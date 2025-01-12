@@ -91,3 +91,15 @@ class PasswordUpdateView(View):
         return render(request, "password_update.html", context={
             "form":form
         })
+
+class UndecidedBoxView(View):
+    def get(self, request):
+        return render(request, "undecided_box.html")
+
+class BelongingsManagementView(View):
+    def get(self, request):
+        return render(request, "belongings_management.html")
+
+class DeclutteringSettingView(View):
+    def get(self, request):
+        return render(request, "decluttering_setting.html")

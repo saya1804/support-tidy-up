@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from app.models import User
 from django.contrib.auth import authenticate
+from .models import Category, SubCategory
 
 class SignupForm(UserCreationForm):
     class Meta:
@@ -13,21 +14,26 @@ class SignupForm(UserCreationForm):
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError("このメールアドレスはすでに登録されています")
         return email
-    
+
 class LoginForm(forms.Form):
     email = forms.EmailField()
-    password = forms.CharField()
-
+    password = forms.CharField(widget=forms.PasswordInput)
 
     def clean(self):
-        print("loginformのクリーンが呼び出された")
-        email = self.cleaned_data.get("email")
-        password = self.cleaned_data.get("password")
+        cleaned_data = super().clean()
+        email = cleaned_data.get("email")
+        password = cleaned_data.get("password")
         print(email, password)
         self.user = authenticate(email=email, password=password)
         if self.user is None:
-            raise forms.ValidationError("認証に失敗しました")
-        return self.cleaned_data
+            self.add_error(None, "認証に失敗しました。メールアドレスまたはパスワードが間違っています。")
+
+            if '__all__' in self.errors:
+                del self.errors['__all__']
+
+            raise forms.ValidationError("認証に失敗しました。メールアドレスまたはパスワードが間違っています")
+
+        return cleaned_data
     
 class UserUpdateForm(forms.ModelForm):
     
@@ -54,3 +60,13 @@ class PasswordUpdateForm(forms.Form):
         if new_password != confirm_password:
             raise forms.ValidationError("新規パスワードと確認用パスワードが一致しません。")
         return cleaned_data
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ['name']
+
+class SubCategoryForm(forms.ModelForm):
+    class Meta:
+        model = SubCategory
+        fields = ['name']

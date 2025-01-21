@@ -4,6 +4,8 @@ from app.forms import SignupForm, LoginForm, UserUpdateForm, PasswordUpdateForm
 from django.contrib.auth import login, update_session_auth_hash
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
+from .models import Category, SubCategory
+from .forms import CategoryForm, SubCategoryForm
 
 # Create your views here.
 
@@ -98,8 +100,41 @@ class UndecidedBoxView(View):
 
 class BelongingsManagementView(View):
     def get(self, request):
-        return render(request, "belongings_management.html")
+        categories = Category.objects.all()
+        category_form = CategoryForm()
+        subcategory_form = SubCategoryForm()
 
+        return render(request, "belongings_management.html",  context={
+            "categories": categories,
+            "category_form": category_form,
+            "subcategory_form": subcategory_form,
+        })
+    def post(self, request):
+        categories = Category.objects.all()
+        category_form = CategoryForm(request.POST)
+        subcategory_form = SubCategoryForm(request.POST)
+        if "add_category" in request.POST:
+            if category_form.is_valid():
+                category_form.save()
+                return redirect("belongings_management")
+        elif "add_subcategory" in request.POST:
+            if subcategory_form.is_valid():
+                category_id = request.POST.get('category_id')
+                print(f"Category ID: {request.POST.get('category_id')}")
+                if category_id:
+                    category = Category.objects.get(id=category_id)
+                    subcategory = subcategory_form.save(commit=False)
+                    subcategory.category = category  
+                    subcategory.save()
+                    return redirect("belongings_management")
+                else:
+                    print("No category_id provided!") 
+        return render(request, "belongings_management.html",  context={
+            "categories": categories,
+            "category_form": category_form,
+            "subcategory_form": subcategory_form,
+        })
+    
 class DeclutteringSettingView(View):
     def get(self, request):
         return render(request, "decluttering_setting.html")

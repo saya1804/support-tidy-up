@@ -21,4 +21,17 @@ class User(AbstractUser):
 
     class Meta:
         db_table = "users"
-        
+
+
+class Category(models.Model):
+    name = models.CharField(max_length=150)
+
+    def __str__(self):
+        return self.name
+
+class SubCategory(models.Model):
+    category = models.ForeignKey(Category, related_name="subcategories", on_delete=models.CASCADE)
+    name = models.CharField(max_length=150)
+
+    def __str__(self):
+        return self.name

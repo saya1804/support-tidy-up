@@ -70,3 +70,11 @@ class SubCategoryForm(forms.ModelForm):
     class Meta:
         model = SubCategory
         fields = ['name']
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'instance' in kwargs:
+            instance = kwargs.get('instance')
+            if instance and instance.category:
+                self.fields['category'].initial = instance.category.id
+                self.fields['category'].widget.attrs['readonly'] = True
+                self.fields['category'].required = False

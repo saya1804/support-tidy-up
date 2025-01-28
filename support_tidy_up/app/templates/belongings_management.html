@@ -50,26 +50,111 @@
                             <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenuButton{{ category.id }}"
                             data-bs-toggle="dropdown" aria-expanded="false">{{ category.name }}
                             </button>
-                            <a href="#" class="edit-category-btn" data-id="{{ category.id }}"
+                            <a href="#" class="edit-category-btn" data-id="{{ category.id }}" data-name="{{ category.name }}"
                             data-bs-toggle="modal" data-bs-target="#editCategoryModal{{ category.id }}">編集</a>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ category.id }}">
                                 {% if category.subcategories.all %}
                                     {% for subcategory in category.subcategories.all %}
-                                        <li>
-                                            <a class="dropdown-item" href="#">
-                                                {{ subcategory.name }}
-                                                <a href="#" class="edit-subcategory-btn" data-id="{{ subcategory.id }}"
-                                                data-bs-toggle="modal" data-bs-target="#editSubCategoryModal{{ subcategory.id }}">編集</a>
-                                            </a>
-                                        </li>
+                                        {% if subcategory.is_deleted == False %}
+                                            <li>
+                                                <a class="dropdown-item" href="#">
+                                                    {{ subcategory.name }}
+                                                    <a href="#" class="edit-subcategory-btn" data-id="{{ subcategory.id }}"
+                                                    data-category-id="{{ category.id }}" data-category-name="{{ category.name }}"
+                                                    data-bs-toggle="modal" data-bs-target="#editSubCategoryModal{{ subcategory.id }}">編集</a>
+                                                </a>
+                                            </li>
+                                        {% endif %}
                                     {% endfor %}
                                 {% else %}
                                     <li><a class="dropdown-item" href="#">小分類がありません</a></li>
                                 {% endif %}
-                                <li><a class="dropdown-item add-subcategory-btn" href="#" data-category-id="{{ category.id }}"
-                                    data-bs-toggle="modal" data-bs-target="#addSubCategoryModal">+</a></li>
+                                <li><button type="button" class="dropdown-item add-subcategory-btn" data-category-id="{{ category.id }}"
+                                    data-bs-toggle="modal" data-bs-target="#addSubCategoryModal{{ category.id }}">+</button>
                             </ul>
                         </div>
+                        <div class="modal fade" id="addSubCategoryModal{{ category.id }}" tabindex="-1" role="dialog" aria-labelledby="addSubCategoryModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="addSubCategoryModalLabel">新規追加</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form method="POST" action="{% url 'belongings_management' %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" id="categoryId" name="category_id" value="{{ category.id }}" >
+                                            <div class="mb-3">
+                                                <label for="categoryNameDisplay" class="form-label">大分類</label>
+                                                <input type="text" class="form-control" id="categoryNameDisplay" placeholder="カテゴリ名" value="{{ category.name }}" readonly>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="subCategoryName" class="form-label">小分類：</label>
+                                                <input type="text" class="form-control" id="subCategoryName" name="name" placeholder="カテゴリの小分類を入力してください">
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit" class="btn btn-primary" name="add_subcategory">登録</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal fade" id="editCategoryModal{{ category.id }}" tabindex="-1" role="dialog" aria-labelledby="editCategoryModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editCategoryModalLabel">編集・削除</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form method="POST" action="{% url 'belongings_management' %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" id="categoryId" name="id" value="{{ category.id }}">
+                                            <div class="mb-3">
+                                              <label for="categoryName" class="form-label">大分類：</label>
+                                              <input type="text" class="form-control" id="categoryName" name="name" value="{{ category.name }}" required>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit" class="btn btn-danger" name="delete_category" value="{{ category.id }}">削除</button>
+                                                <button type="submit" class="btn btn-primary" name="edit_category">更新</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% for subcategory in category.subcategories.all %}
+                        <div class="modal fade" id="editSubCategoryModal{{ subcategory.id }}" tabindex="-1" role="dialog" aria-labelledby="editSubCategoryModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editSubCategoryModallabel">編集・削除</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form method="POST" action="{% url 'belongings_management' %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" id="subcategoryId" name="subcategory_id" value="{{ subcategory.id }}">
+                                            <input type="hidden" id="categoryId" name="category_id" value="{{ category.id }}">
+                                            <div class="mb-3">
+                                                <label for="categoryName" class="form-label">大分類：</label>
+                                                <input type="text" class="form-control" id="categoryName" name="category_name" value="{{ category.name }}" required readonly>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="subcategoryName" class="form-label">小分類：</label>
+                                                <input type="text" class="form-control" id="subcategoryName" name="subcategory_name" value="{{ subcategory.name }}" required>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit" class="btn btn-danger" name="delete_subcategory" value="{{ subcategory.id }}">削除</button>
+                                                <button type="submit" class="btn btn-primary" name="edit_subcategory">更新</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
                     {% endfor %}
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">+</button>
                 </div>
@@ -96,38 +181,133 @@
                     </div>
                 </div>
             </div>
-            <div class="modal fade" id="addSubCategoryModal" tabindex="-1" role="dialog" aria-labelledby="addSubCategoryModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="addSubCategoryModallabel">新規追加</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form method="POST" action="{% url 'belongings_management' %}">
-                                {% csrf_token %}
-                                <div class="mb-3">
-                                    <label for="subCategoryName" class="form-label">小分類：</label>
-                                    <input type="text" class="form-control" id="subCategoryName" name="name" placeholder="カテゴリの小分類を入力してください">
-                                    <input type="hidden" id="categoryId" name="category_id">
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="submit" class="btn btn-primary" name="add_subcategory">登録</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
         <script>
-            // ボタンがクリックされた時、選択されたカテゴリIDを隠しフィールドにセット
-            document.querySelectorAll('.add-subcategory-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const categoryId = this.getAttribute('data-category-id');
-                    document.getElementById('categoryId').value = categoryId;
+            document.addEventListener('DOMContentLoaded', function() {
+                // サブカテゴリ追加ボタン
+                const addSubcategoryBtns = document.querySelectorAll('.add-subcategory-btn');
+                addSubcategoryBtns.forEach(function(button) {
+                    button.addEventListener('click', function() {
+                        const categoryId = this.getAttribute('data-category-id'); // カテゴリIDを取得
+                        const categoryName = this.closest('.dropdown').querySelector('button').innerText; // カテゴリ名を取得
+            
+                        // categoryIdを隠しフィールドにセット
+                        const modalId = '#addSubCategoryModal' + categoryId;
+                        const modalElement = document.querySelector(modalId);
+            
+                        if (modalElement) {
+                            modalElement.querySelector('#categoryId').value = categoryId;
+                            modalElement.querySelector('#categoryNameDisplay').value = categoryName;
+                            modalElement.querySelector('#categoryNameDisplay').setAttribute('readonly', true);
+            
+                            const bootstrapModal = new bootstrap.Modal(modalElement);
+                            bootstrapModal.show();
+                        }
+                    });
+                });
+            
+                // カテゴリ編集
+                const editCategoryBtns = document.querySelectorAll('.edit-category-btn');
+                editCategoryBtns.forEach(function(button) {
+                    button.addEventListener('click', function() {
+                        const categoryId = this.getAttribute('data-id');
+                        const categoryName = this.getAttribute('data-name');
+                        const modalId = 'editCategoryModal' + categoryId;
+            
+                        const modal = document.getElementById(modalId);
+            
+                        if (modal) {
+                            modal.querySelector('#categoryId').value = categoryId;
+                            modal.querySelector('#categoryName').value = categoryName;
+            
+                            const bootstrapModal = new bootstrap.Modal(modal);
+                            bootstrapModal.show();  // モーダルを表示
+                        }
+                    });
+                });
+            
+                // サブカテゴリ編集
+                const editSubcategoryBtns = document.querySelectorAll('.edit-subcategory-btn');
+                editSubcategoryBtns.forEach(function(button) {
+                    button.addEventListener('click', function() {
+                        const subcategoryId = this.getAttribute('data-id');
+                        const categoryId = this.getAttribute('data-category-id');
+            
+                        // サブカテゴリ名を取得
+                        const subcategoryName = this.closest('li').querySelector('a').innerText.trim();
+            
+                        const modalId = 'editSubCategoryModal' + subcategoryId; // 動的にIDを生成
+                        const modal = document.getElementById(modalId);
+            
+                        if (modal) {
+                            // サブカテゴリのフォームの値を設定
+                            modal.querySelector('#subcategoryId').value = subcategoryId;
+                            modal.querySelector('#categoryId').value = categoryId;
+                            modal.querySelector('#subcategoryName').value = subcategoryName;  // サブカテゴリ名を設定
+            
+                            const bootstrapModal = new bootstrap.Modal(modal);
+                            bootstrapModal.show();  // モーダルを表示
+                        }
+                    });
+                });
+            
+                // 削除ボタン（カテゴリ）
+                const deleteCategoryBtns = document.querySelectorAll('.delete-category-btn');
+                deleteCategoryBtns.forEach(function(button) {
+                    button.addEventListener('click', function() {
+                        const categoryId = this.getAttribute('data-id');
+                        if (confirm('削除しますか？')) {
+                            const form = createDeleteForm(categoryId, 'category');
+                            form.submit();
+                        }
+                    });
+                });
+            
+                // 削除ボタン（サブカテゴリ）
+                const deleteSubcategoryBtns = document.querySelectorAll('.delete-subcategory-btn');
+                deleteSubcategoryBtns.forEach(function(button) {
+                    button.addEventListener('click', function() {
+                        const subcategoryId = this.getAttribute('data-id');
+                        const subcategoryName = this.closest('li').querySelector('a').innerText.trim();
+                        if (confirm('「${subcategoryName}」を削除しますか？')) {
+                            const form = createDeleteForm(subcategoryId, 'subcategory');
+                            form.addEventListener('submit', function() {
+                                const modal = document.getElementById(`editSubCategoryModal${subcategoryId}`);
+                                const bootstrapModal = new bootstrap.Modal(modal);
+                                bootstrapModal.hide();
+                            });
+                            form.submit();
+                        }
+                    });
+                });
+            
+                // 削除フォーム作成
+                function createDeleteForm(id, type) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '{% url "belongings_management" %}';
+                    form.innerHTML = `
+                        {% csrf_token %}
+                        <input type="hidden" name="${type}_id" value="${id}">
+                        <input type="hidden" name="delete_${type}" value="${id}">
+                    `;
+                    document.body.appendChild(form);
+                    return form;
+                }
+            
+                // モーダルが閉じられた時にバックドロップを削除する
+                const modalElements = document.querySelectorAll('.modal');
+                modalElements.forEach(function(modal) {
+                    const bootstrapModal = new bootstrap.Modal(modal);
+            
+                    // モーダルが閉じられた際にイベントを設定
+                    modal.addEventListener('hidden.bs.modal', function () {
+                        const backdrop = document.querySelector('.modal-backdrop');
+                        if (backdrop) {
+                            backdrop.remove();  // バックドロップを削除
+                        }
+                    });
                 });
             });
         </script>

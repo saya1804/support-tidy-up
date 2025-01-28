@@ -100,36 +100,67 @@ class UndecidedBoxView(View):
 
 class BelongingsManagementView(View):
     def get(self, request):
-        categories = Category.objects.all()
+        categories = Category.objects.filter(is_deleted=False)
+        subcategories = SubCategory.objects.filter(is_deleted=False)
         category_form = CategoryForm()
         subcategory_form = SubCategoryForm()
 
-        return render(request, "belongings_management.html",  context={
+        return render(request, "belongings_management.html", context={
             "categories": categories,
+            "subcategories": subcategories,
             "category_form": category_form,
             "subcategory_form": subcategory_form,
         })
+
     def post(self, request):
-        categories = Category.objects.all()
+        categories = Category.objects.filter(is_deleted=False)
         category_form = CategoryForm(request.POST)
         subcategory_form = SubCategoryForm(request.POST)
+
         if "add_category" in request.POST:
             if category_form.is_valid():
                 category_form.save()
                 return redirect("belongings_management")
+            
         elif "add_subcategory" in request.POST:
             if subcategory_form.is_valid():
+                subcategory = subcategory_form.save(commit=False)
                 category_id = request.POST.get('category_id')
-                print(f"Category ID: {request.POST.get('category_id')}")
-                if category_id:
-                    category = Category.objects.get(id=category_id)
-                    subcategory = subcategory_form.save(commit=False)
-                    subcategory.category = category  
-                    subcategory.save()
-                    return redirect("belongings_management")
-                else:
-                    print("No category_id provided!") 
-        return render(request, "belongings_management.html",  context={
+                subcategory.category = Category.objects.get(id=category_id)
+                subcategory.save()
+                return redirect("belongings_management")
+
+        elif "edit_category" in request.POST:
+            category_id = request.POST.get('id')
+            category_name = request.POST.get('name')
+            category = Category.objects.get(id=category_id)
+            category.name = category_name
+            category.save()
+            return redirect("belongings_management")
+
+        elif "edit_subcategory" in request.POST:
+            subcategory_id = request.POST.get('subcategory_id')
+            subcategory_name = request.POST.get('subcategory_name')
+            subcategory = SubCategory.objects.get(id=subcategory_id)
+            subcategory.name = subcategory_name
+            subcategory.save()
+            return redirect("belongings_management")
+
+        elif "delete_category" in request.POST:
+            category_id = request.POST.get('delete_category')
+            category = Category.objects.get(id=category_id)
+            category.is_deleted = True
+            category.save()
+            return redirect("belongings_management")
+
+        elif "delete_subcategory" in request.POST:
+            subcategory_id = request.POST.get('delete_subcategory')
+            subcategory = SubCategory.objects.get(id=subcategory_id)
+            subcategory.is_deleted = True
+            subcategory.save()
+            return redirect("belongings_management")
+
+        return render(request, "belongings_management.html", context={
             "categories": categories,
             "category_form": category_form,
             "subcategory_form": subcategory_form,

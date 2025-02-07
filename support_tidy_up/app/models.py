@@ -37,3 +37,24 @@ class SubCategory(models.Model):
 
     def __str__(self):
         return self.name
+
+class Belonging(models.Model):
+    subcategory = models.ForeignKey(SubCategory, on_delete=models.CASCADE)
+    name = models.CharField(max_length=200)
+    image_url = models.ImageField(upload_to='belongings_images/', null=True, blank=True)
+    purchase_date = models.DateField()
+    item_area = models.CharField(max_length=150)
+    DAMAGE_LEVEL_CHOISES = [
+        (1, '軽い損傷'),
+        (2, 'やや軽い損傷'),
+        (3, '中程度の損傷'),
+        (4, 'やや重い損傷'),
+        (5, '重い損傷'),
+    ]
+    damage_level = models.IntegerField(choices=DAMAGE_LEVEL_CHOISES)
+    favorite_level = models.IntegerField()
+    is_deleted = models.BooleanField(default=False)
+    is_in_decluttering = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name

@@ -1,0 +1,138 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>持ち物管理アイテム編集-Support Tidy Up</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <a class="navbar-brand" href="#">Support Tidy Up</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">断捨離リスト</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'undecided_box' %}">保留ボックス</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'belongings_management' %}">持ち物管理</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown"
+                        role="button" data-bs-toggle="dropdown" aria-expanded="false">設定
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="{% url 'user_update' %}">アカウント情報変更</a></li>
+                            <li><a class="dropdown-item" href="{% url 'decluttering_setting' %}">断捨離設定</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">ログアウト</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <div class="container mt-4">
+            <h2>編集</h2>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-group">
+                    <lavel for="id_name">名前：</lavel>
+                    {{ form.name }}
+                </div>
+                <div class="form-group">
+                    {% if form.instance.image_url %}
+                        <img src="{{ form.instance.image_url.url }}" alt="現在の画像" id="current-image" style="cursor: pointer; width: 100px;">
+                    {% endif %}
+                    <input type="file" name="image_url" id="id_image_url" style="display: none;" onchange="previewImage(event)">
+                    <p>画像を変更するには、画像をクリックしてください。</p>
+                </div>
+                <div class="form-group">
+                    <lavel for="id_purchase_date">購入日：</lavel>
+                    {{ form.purchase_date }}
+                </div>
+                <div class="form-group">
+                    <lavel for="id_item_area">エリア：</lavel>
+                    {{ form.item_area }}
+                </div>
+                <div class="form-group">
+                    <lavel for="id_damage_level">物損状況：</lavel>
+                    {{ form.damage.level }}
+                </div>
+                <div class="form-group">
+                    <lavel for="id_favorite_level">お気に入り：</lavel>
+                    <div class="star-rating" id="favorite-rating">
+                        <i class="fas fa-star" data-value="1"></i>
+                        <i class="fas fa-star" data-value="2"></i>
+                        <i class="fas fa-star" data-value="3"></i>
+                        <i class="fas fa-star" data-value="4"></i>
+                        <i class="fas fa-star" data-value="5"></i>
+                    </div>
+                    <input type="hidden" name="favorite_level" id="favorite_level" value="0">
+                </div>
+                <div class="form-group">
+                    <lavel for="id_category">カテゴリ：</lavel>
+                    {{ form.category }}
+                </div>
+                <div class="form-group">
+                    {{ form.subcategory }}
+                </div>
+                <button type="submit" class="btn btn-primary">更新</button>
+            </form>
+            <a href="{% url 'belongings_management' %}" class="btn btn-secondary">戻る</a>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+        <script>
+            // 画像をクリックすると、画像選択ダイアログを開く
+            document.getElementById("current-image").addEventListener("click", function() {
+                document.getElementById("id_image_url").click();  // 非表示のファイル選択フィールドをクリック
+            });
+
+            // 画像プレビューの表示
+            function previewImage(event) {
+                var reader = new FileReader();
+                reader.onload = function() {
+                    var output = document.getElementById('current-image');
+                    output.src = reader.result;
+                };
+                reader.readAsDataURL(event.target.files[0]);
+            }
+
+            // 星評価のクリックで評価を変更
+            document.querySelectorAll('#favorite-rating .fa-star').forEach(function(star) {
+                star.addEventListener('click', function() {
+                    var rating = this.getAttribute('data-value');
+                    document.getElementById('favorite_level').value = rating;
+
+                    // 星の色を変更
+                    var stars = document.querySelectorAll('#favorite-rating .fa-star');
+                    stars.forEach(function(star) {
+                        star.style.color = (star.getAttribute('data-value') <= rating) ? 'gold' : 'gray';
+                    });
+                });
+            });
+
+            // フォームの送信前に必須項目（名前、購入日）が入力されているかをチェックする
+            document.querySelector('form').addEventListener('submit', function(event) {
+                var name = document.getElementById('id_name').value;
+                var purchaseDate = document.getElementById('id_purchase_date').value;
+
+                if (!name || !purchaseDate) {
+                    event.preventDefault();  // フォーム送信を停止
+                    alert('名前と購入日は必須です');
+                }
+            });
+        </script>
+    </body>
+</html>

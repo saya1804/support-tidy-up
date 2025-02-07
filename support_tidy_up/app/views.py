@@ -1,11 +1,13 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from app.forms import SignupForm, LoginForm, UserUpdateForm, PasswordUpdateForm
 from django.contrib.auth import login, update_session_auth_hash
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from .models import Category, SubCategory
-from .forms import CategoryForm, SubCategoryForm
+from .models import Belonging, Category, SubCategory
+from .forms import CategoryForm, SubCategoryForm, BelongingForm
+from django.http import JsonResponse
+from django.urls import reverse
 
 # Create your views here.
 
@@ -53,7 +55,7 @@ class HomeView(LoginRequiredMixin, View):
         return render(request, "home.html")
 
 
-class UserUpdateView(View):
+class UserUpdateView(LoginRequiredMixin, View):
     def get(self, request):
         return render(request, "user_update.html")
     def post(self, request):
@@ -68,7 +70,7 @@ class UserUpdateView(View):
             "form":form,
         })
 
-class PasswordUpdateView(View):
+class PasswordUpdateView(LoginRequiredMixin, View):
     def get(self, request):
         return render(request, "password_update.html")
     def post(self, request):
@@ -94,25 +96,52 @@ class PasswordUpdateView(View):
             "form":form
         })
 
-class UndecidedBoxView(View):
+class UndecidedBoxView(LoginRequiredMixin, View):
     def get(self, request):
         return render(request, "undecided_box.html")
 
-class BelongingsManagementView(View):
+class BelongingsManagementView(LoginRequiredMixin, View):
     def get(self, request):
+        belongings = Belonging.objects.filter(is_deleted=False)
+        for belonging in belongings:
+            stars = []
+            favorite_level = belonging.favorite_level
+            for i in range(1, 6):
+                if i <= favorite_level:
+                    stars.append("★")
+                else:
+                    stars.append("☆")
+                belonging.stars = "".join(stars)
+        decluttering_items = Belonging.objects.filter(is_in_decluttering=True)
         categories = Category.objects.filter(is_deleted=False)
         subcategories = SubCategory.objects.filter(is_deleted=False)
         category_form = CategoryForm()
         subcategory_form = SubCategoryForm()
+        selected_subcategory = None
+        if 'subcategory_id' in request.GET:
+            selected_subcategory = SubCategory.objects.get(id=request.GET['subcategory_id'])
+
+        subcategory_links = []
+        for subcategory in subcategories:
+            subcategory_links.append({
+                'id': subcategory.id,
+                'name': subcategory.name,
+                'url': reverse('add_belonging', kwargs={'subcategory_id': subcategory.id})
+            })
 
         return render(request, "belongings_management.html", context={
+            "belongings": belongings,
+            "decluttering_items": decluttering_items,
             "categories": categories,
             "subcategories": subcategories,
             "category_form": category_form,
             "subcategory_form": subcategory_form,
+            "selected_subcategory": selected_subcategory,
+            "subcategory_links": subcategory_links,
         })
 
     def post(self, request):
+        belongings = Belonging.objects.filter(is_deleted=False)
         categories = Category.objects.filter(is_deleted=False)
         category_form = CategoryForm(request.POST)
         subcategory_form = SubCategoryForm(request.POST)
@@ -161,11 +190,65 @@ class BelongingsManagementView(View):
             return redirect("belongings_management")
 
         return render(request, "belongings_management.html", context={
+            "belongings": belongings,
             "categories": categories,
             "category_form": category_form,
             "subcategory_form": subcategory_form,
         })
+
+    def get_belongings_for_subcategory(request, subcategory_id):
+        subcategory =SubCategory.objects.get(id=subcategory_id)
+        belongings = Belonging.objects.filter(subcategory=subcategory, is_deleted=False)
+        belonging_data = []
+        for belonging in belongings:
+            belonging_data.append({
+                'name': belonging.name,
+                'image_url': belonging.image.url
+            })
+        return JsonResponse({'belongings': belonging_data})
     
-class DeclutteringSettingView(View):
+class MoveToDeclutteringListView(View):
+    def post(self, request, belonging_id):
+        belonging = get_object_or_404(Belonging, id=belonging_id)
+        belonging.is_in_decluttering = True
+        belonging.save()
+        return redirect("belongings_management")
+    
+class DeleteBelongingView(View):
+    def post(self, request, belonging_id):
+        belonging = get_object_or_404(Belonging, id=belonging_id)
+        belonging.is_deleted = True
+        belonging.save()
+        return redirect("belongings_management")
+    
+class AddBelongingView(LoginRequiredMixin, View):
+    def get(self, request, subcategory_id):
+        subcategory = SubCategory.objects.get(id=subcategory_id)
+        form = BelongingForm()
+        return render(request, "add_belonging.html", {
+            'form': form,
+            'subcategory': subcategory,
+        })
+    def post(self, request):
+        form = BelongingForm(request.POST, request.FILES)
+        if form. is_valid():
+            form.save()
+            return redirect("belongings_management")
+        return render(request,"add_belonging.html", {'form': form})
+
+class EditBelongingView(LoginRequiredMixin, View):
+    def get(self, request, belonging_id):
+        belonging = get_object_or_404(Belonging, id=belonging_id)
+        form = BelongingForm(instance=belonging)
+        return render(request, "edit_belonging.html", {'form': form, 'belonging': belonging})
+    def post(self, request, belonging_id):
+        belonging = get_object_or_404(Belonging, id=belonging_id)
+        form = BelongingForm(request.POST, instance=belonging)
+        if form.is_valid():
+            form.save()
+            return redirect("belongings_management")
+        return render(request, "edit_belonging.html", {'form': form, 'belonging': belonging})
+     
+class DeclutteringSettingView(LoginRequiredMixin, View):
     def get(self, request):
         return render(request, "decluttering_setting.html")

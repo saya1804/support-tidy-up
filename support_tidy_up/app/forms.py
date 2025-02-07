@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from app.models import User
 from django.contrib.auth import authenticate
-from .models import Category, SubCategory
+from .models import Category, SubCategory, Belonging
 
 class SignupForm(UserCreationForm):
     class Meta:
@@ -78,3 +78,11 @@ class SubCategoryForm(forms.ModelForm):
                 self.fields['category'].initial = instance.category.id
                 self.fields['category'].widget.attrs['readonly'] = True
                 self.fields['category'].required = False
+
+class BelongingForm(forms.ModelForm):
+    class Meta:
+        model = Belonging
+        fields = ['name', 'image_url', 'purchase_date', 'item_area', 'damage_level', 'favorite_level', 'subcategory']
+        widgets = {
+            'damage_level': forms.Select(choices=Belonging.DAMAGE_LEVEL_CHOISES)
+        }

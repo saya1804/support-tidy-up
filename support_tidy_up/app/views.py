@@ -100,8 +100,9 @@ class UndecidedBoxView(LoginRequiredMixin, View):
     def get(self, request):
         return render(request, "undecided_box.html")
 
+
 class BelongingsManagementView(LoginRequiredMixin, View):
-    def get(self, request):
+    def get(self, request, subcategory_id=None):
         belongings = Belonging.objects.filter(is_deleted=False)
         for belonging in belongings:
             stars = []
@@ -111,22 +112,27 @@ class BelongingsManagementView(LoginRequiredMixin, View):
                     stars.append("★")
                 else:
                     stars.append("☆")
-                belonging.stars = "".join(stars)
+            belonging.stars = "".join(stars)
         decluttering_items = Belonging.objects.filter(is_in_decluttering=True)
         categories = Category.objects.filter(is_deleted=False)
+
+         # categoriesからcategory.idを確認する
+        for category in categories:
+            print(category.id)  # ここでカテゴリIDを確認
+
         subcategories = SubCategory.objects.filter(is_deleted=False)
         category_form = CategoryForm()
         subcategory_form = SubCategoryForm()
         selected_subcategory = None
-        if 'subcategory_id' in request.GET:
-            selected_subcategory = SubCategory.objects.get(id=request.GET['subcategory_id'])
+        if subcategory_id:
+            selected_subcategory = SubCategory.objects.get(id=subcategory_id).first()
 
         subcategory_links = []
         for subcategory in subcategories:
             subcategory_links.append({
                 'id': subcategory.id,
                 'name': subcategory.name,
-                'url': reverse('add_belonging', kwargs={'subcategory_id': subcategory.id})
+                'url': reverse('get_belongings_for_subcategory', kwargs={'subcategory_id': subcategory.id})
             })
 
         return render(request, "belongings_management.html", context={
@@ -170,7 +176,12 @@ class BelongingsManagementView(LoginRequiredMixin, View):
         elif "edit_subcategory" in request.POST:
             subcategory_id = request.POST.get('subcategory_id')
             subcategory_name = request.POST.get('subcategory_name')
-            subcategory = SubCategory.objects.get(id=subcategory_id)
+            if not subcategory_id or not subcategory_name:
+                return redirect("error_page")  # 適切なエラーページにリダイレクト
+            try:
+                subcategory = SubCategory.objects.get(id=subcategory_id)
+            except SubCategory.DoesNotExist:
+                return redirect("error_page")  # 適切なエラーページにリダイレクト
             subcategory.name = subcategory_name
             subcategory.save()
             return redirect("belongings_management")
@@ -196,14 +207,18 @@ class BelongingsManagementView(LoginRequiredMixin, View):
             "subcategory_form": subcategory_form,
         })
 
-    def get_belongings_for_subcategory(request, subcategory_id):
-        subcategory =SubCategory.objects.get(id=subcategory_id)
+class GetBelongingsForSubcategoryView(View):
+    def get(self, request, subcategory_id):
+        try:
+            subcategory =SubCategory.objects.get(id=subcategory_id)
+        except SubCategory.DoesNotExist:
+            return JsonResponse({'error': 'Subcategory not found'}, status=404)
         belongings = Belonging.objects.filter(subcategory=subcategory, is_deleted=False)
         belonging_data = []
         for belonging in belongings:
             belonging_data.append({
                 'name': belonging.name,
-                'image_url': belonging.image.url
+                'image_url': belonging.image.url if belonging.image else None
             })
         return JsonResponse({'belongings': belonging_data})
     

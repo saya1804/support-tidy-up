@@ -62,7 +62,7 @@
                                                         <a class="dropdown-item subcategory-btn" href="#" data-id="{{ subcategory.id }}" data-category-id="{{ category.id }}">
                                                         {{ subcategory.name }}
                                                         <a href="#" class="edit-subcategory-btn" data-id="{{ subcategory.id }}" data-category-id="{{ category.id }}"
-                                                        data-category-name="{{ category.name }}" data-bs-toggle="modal"data-bs-target="#editSubCategoryModal{{ subcategory.id }}">編集</a>
+                                                        data-category-name="{{ category.name }}" data-bs-toggle="modal" data-bs-target="#editSubCategoryModal{{ subcategory.id }}">編集</a>
                                                     </li>
                                                  {% endif %}
                                             {% endfor %}
@@ -82,7 +82,7 @@
                 </div>
                 <div class="col-md-9">
                     <div class="d-flex flex-column align-items-start">
-                        <h2 id="subcategory-name" class="mb-4">{{ selected_subcategory.name }}</h2>
+                        <h2 id="subcategory-display-area" class="mb-4">{{ selected_subcategory.name }}</h2>
                         <div class="row" id="belongings-list">
                             {% for belonging in belongings %}
                                 {% if not belonging.is_in_decluttering %}
@@ -126,7 +126,9 @@
                 </div>
             </div>
         </div>
+        {% for category in categories %}
         <div class="modal fade" id="addSubCategoryModal{{ category.id }}" tabindex="-1" role="dialog" aria-labelledby="addSubCategoryModalLabel" aria-hidden="true">
+            <p>{{ category.id }}</p>
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -153,6 +155,8 @@
                 </div>
             </div>
         </div>
+        {% endfor %}
+        {% for category in categories %}
         <div class="modal fade" id="editCategoryModal{{ category.id }}" tabindex="-1" role="dialog" aria-labelledby="editCategoryModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
@@ -178,12 +182,13 @@
                 </div>
             </div>
         </div>
+        {% endfor %}
         {% for subcategory in category.subcategories.all %}
         <div class="modal fade" id="editSubCategoryModal{{ subcategory.id }}" tabindex="-1" role="dialog" aria-labelledby="editSubCategoryModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="editSubCategoryModallabel">編集・削除</h5>
+                        <h5 class="modal-title" id="editSubCategoryModalLabel">編集・削除</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -293,7 +298,6 @@
                             displayArea.innerHTML = `
                                 <h3>サブカテゴリ名: ${subcategoryName}</h3>
                                 <div id="belonging-list">
-                                    <!-- ここにサブカテゴリのアイテムが表示される -->
                                     <p>アイテムを読み込んでいます...</p>
                                 </div>
                             `;
@@ -305,14 +309,18 @@
                                     const belongingList = data.belongings || [];  // サーバーからアイテムのデータを取得
         
                                     const belongingListHtml = belongingList.map(belonging => `
-                                        <div class="belonging">
-                                            <p>${belonging.name}</p>
-                                            <img src="${belonging.image_url}" alt="${belonging.name}" style="width: 100px; height: auto;">
+                                        <div class="col-md-4 mb-3">
+                                            <div class="belonging-card position-relative">
+                                                <img src="${belonging.image_url}" alt="${belonging.name}" class="belonging-img-top" style="width: 100%; height: auto;">
+                                                <div class="belonging-body">
+                                                    <h5 class="belonging-title">${belonging.name}</h5>
+                                                </div>
+                                            </div>
                                         </div>
                                     `).join('');
         
                                     // アイテムリストを更新
-                                    const belongingListElement = displayArea.querySelector('#belonging-list');
+                                    const belongingListElement = document.getElementById('belonging-list');
                                     if (belongingListElement) {
                                         belongingListElement.innerHTML = belongingListHtml;
                                     }
@@ -330,11 +338,14 @@
                     addSubcategoryBtns.forEach(function(button) {
                         button.addEventListener('click', function() {
                             const categoryId = this.getAttribute('data-category-id'); // カテゴリIDを取得
+                            console.log("categoryId:", categoryId);
                             const categoryName = this.closest('.dropdown').querySelector('button').innerText; // カテゴリ名を取得
         
                             // categoryIdを隠しフィールドにセット
                             const modalId = '#addSubCategoryModal' + categoryId;
+                            console.log("modalId:", modalId); 
                             const modalElement = document.querySelector(modalId);
+                            console.log(modalElement);
         
                             if (modalElement) {
                                 modalElement.querySelector('#categoryId').value = categoryId;
@@ -346,6 +357,8 @@
                                     backdrop: 'static', // バックドロップを静的に設定
                                 });
                                 bootstrapModal.show();
+                            } else {
+                                console.error('指定されたモーダルが見つかりません: ' + modalId);
                             }
                         });
                     });

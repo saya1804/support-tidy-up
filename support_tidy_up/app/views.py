@@ -102,7 +102,7 @@ class UndecidedBoxView(LoginRequiredMixin, View):
 
 
 class BelongingsManagementView(LoginRequiredMixin, View):
-    def get(self, request, subcategory_id=None):
+    def get(self, request):
         belongings = Belonging.objects.filter(is_deleted=False)
         for belonging in belongings:
             stars = []
@@ -115,25 +115,18 @@ class BelongingsManagementView(LoginRequiredMixin, View):
             belonging.stars = "".join(stars)
         decluttering_items = Belonging.objects.filter(is_in_decluttering=True)
         categories = Category.objects.filter(is_deleted=False)
-
-         # categoriesからcategory.idを確認する
-        for category in categories:
-            print(category.id)  # ここでカテゴリIDを確認
-
         subcategories = SubCategory.objects.filter(is_deleted=False)
         category_form = CategoryForm()
         subcategory_form = SubCategoryForm()
-        selected_subcategory = None
-        if subcategory_id:
-            selected_subcategory = SubCategory.objects.get(id=subcategory_id).first()
 
         subcategory_links = []
         for subcategory in subcategories:
-            subcategory_links.append({
-                'id': subcategory.id,
-                'name': subcategory.name,
-                'url': reverse('get_belongings_for_subcategory', kwargs={'subcategory_id': subcategory.id})
-            })
+            if subcategory.id:
+                subcategory_links.append({
+                    'id': subcategory.id,
+                    'name': subcategory.name,
+                    'url': reverse('get_belongings_for_subcategory', kwargs={'subcategory_id': subcategory.id})
+                })
 
         return render(request, "belongings_management.html", context={
             "belongings": belongings,
@@ -142,7 +135,6 @@ class BelongingsManagementView(LoginRequiredMixin, View):
             "subcategories": subcategories,
             "category_form": category_form,
             "subcategory_form": subcategory_form,
-            "selected_subcategory": selected_subcategory,
             "subcategory_links": subcategory_links,
         })
 
@@ -243,13 +235,16 @@ class AddBelongingView(LoginRequiredMixin, View):
         return render(request, "add_belonging.html", {
             'form': form,
             'subcategory': subcategory,
+            'subcategory_id': subcategory_id
         })
-    def post(self, request):
+    def post(self, request, subcategory_id):
         form = BelongingForm(request.POST, request.FILES)
         if form. is_valid():
+            belonging = form.save(commit=False)
+            belonging.subcategory = SubCategory.objects.get(id=subcategory_id)
             form.save()
             return redirect("belongings_management")
-        return render(request,"add_belonging.html", {'form': form})
+        return render(request,"add_belonging.html", {'form': form, 'subcategory_id': subcategory_id})
 
 class EditBelongingView(LoginRequiredMixin, View):
     def get(self, request, belonging_id):

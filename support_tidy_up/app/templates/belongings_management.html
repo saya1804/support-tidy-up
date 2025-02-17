@@ -82,7 +82,7 @@
                 </div>
                 <div class="col-md-9">
                     <div class="d-flex flex-column align-items-start">
-                        <h2 id="subcategory-display-area" class="mb-4">{{ selected_subcategory.name }}</h2>
+                        <h2 id="subcategory-display-area" class="mb-4">{{ subcategory.name }}</h2>
                         <div class="row" id="belongings-list">
                             {% for belonging in belongings %}
                                 {% if not belonging.is_in_decluttering %}
@@ -112,10 +112,18 @@
                         <div class="col-md-4 mb-3">
                             <div class="belonging-card">
                                 <div class="belonging-body">
-                                    {% if selected_subcategory %}
-                                    <a href="{% url 'add_belonging' selected_subcategory.id %}" class="btn btn-primary add-belonging-btn">
-                                        <span class="plus-sign">+</span>
-                                    </a>
+                                    {% if subcategory %}
+                                        {% if belongings %}
+                                            <div>
+                                                <a href="{% url 'add_belonging' subcategory_id=subcategory.id %}" class="btn btn-primary add-belonging-btn">
+                                                    <span class="plus-sign">+</span>
+                                                </a>
+                                            </div>
+                                        {% else %}
+                                            <a href="{% url 'add_belonging' subcategory_id=subcategory.id %}" class="btn btn-primary add-belonging-btn">
+                                                <span class="plus-sign">+</span>
+                                            </a>
+                                        {% endif %}
                                     {% else %}
                                         <p>サブカテゴリを選択してください</p>
                                     {% endif %}
@@ -400,7 +408,9 @@
                             const subcategoryName = this.closest('li').querySelector('a').innerText.trim();
         
                             const modalId = 'editSubCategoryModal' + subcategoryId; // 動的にIDを生成
+                            console.log('Generated modalId:', modalId);
                             const modal = document.getElementById(modalId);
+                            console.log('Modal:', modal);
         
                             if (modal) {
                                 // サブカテゴリのフォームの値を設定
@@ -415,7 +425,7 @@
                             }
                         });
                     });
-                }
+                }    
         
                 // 削除ボタン（カテゴリ）
                 const deleteCategoryBtns = document.querySelectorAll('.delete-category-btn');

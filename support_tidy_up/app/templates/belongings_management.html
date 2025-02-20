@@ -190,37 +190,39 @@
                 </div>
             </div>
         </div>
-        {% endfor %}
-        {% for subcategory in category.subcategories.all %}
-        <div class="modal fade" id="editSubCategoryModal{{ subcategory.id }}" tabindex="-1" role="dialog" aria-labelledby="editSubCategoryModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editSubCategoryModalLabel">編集・削除</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form method="POST" action="{% url 'belongings_management' %}">
-                            {% csrf_token %}
-                            <input type="hidden" id="subcategoryId" name="subcategory_id" value="{{ subcategory.id }}">
-                            <input type="hidden" id="categoryId" name="category_id" value="{{ category.id }}">
-                            <div class="mb-3">
-                                <label for="categoryName" class="form-label">大分類：</label>
-                                <input type="text" class="form-control" id="categoryName" name="category_name" value="{{ category.name }}" required readonly>
-                            </div>
-                            <div class="mb-3">
-                                <label for="subcategoryName" class="form-label">小分類：</label>
-                                <input type="text" class="form-control" id="subcategoryName" name="subcategory_name" value="{{ subcategory.name }}" required>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="submit" class="btn btn-danger" name="delete_subcategory" value="{{ subcategory.id }}">削除</button>
-                                <button type="submit" class="btn btn-primary" name="edit_subcategory">更新</button>
-                            </div>
-                        </form>
+        {% endfor %}]
+        {% for category in categories %}
+            {% for subcategory in category.subcategories.all %}
+            <div class="modal fade" id="editSubCategoryModal{{ subcategory.id }}" tabindex="-1" role="dialog" aria-labelledby="editSubCategoryModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editSubCategoryModalLabel">編集・削除</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form method="POST" action="{% url 'belongings_management' %}">
+                                {% csrf_token %}
+                                <input type="hidden" id="subcategoryId" name="subcategory_id" value="{{ subcategory.id }}">
+                                <input type="hidden" id="categoryId" name="category_id" value="{{ category.id }}">
+                                <div class="mb-3">
+                                    <label for="categoryName" class="form-label">大分類：</label>
+                                    <input type="text" class="form-control" id="categoryName" name="category_name" value="{{ category.name }}" required readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="subcategoryName" class="form-label">小分類：</label>
+                                    <input type="text" class="form-control" id="subcategoryName" name="subcategory_name" value="{{ subcategory.name }}" required>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-danger" name="delete_subcategory" value="{{ subcategory.id }}">削除</button>
+                                    <button type="submit" class="btn btn-primary" name="edit_subcategory">更新</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+            {% endfor %}
         {% endfor %}
         <div class="modal fade" id="addCategoryModal" tabindex="-1" role="dialog" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered" role="document">
